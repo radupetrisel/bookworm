@@ -19,6 +19,10 @@ struct AddBookView: View {
     @State private var genre = "Fantasy"
     @State private var review = ""
     
+    private var isSaveDisabled: Bool {
+        title.isEmpty || author.isEmpty || genre.isEmpty
+    }
+    
     var body: some View {
         NavigationView {
             Form {
@@ -55,6 +59,7 @@ struct AddBookView: View {
                         dismiss()
                     }
                 }
+                .disabled(isSaveDisabled)
             }
             .navigationTitle("Add a book")
         }
