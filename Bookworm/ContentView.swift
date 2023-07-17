@@ -32,9 +32,10 @@ struct ContentView: View {
                                     .font(.headline)
                                 
                                 Text(book.author ?? "Unknown author")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(book.rating == 1 ? .red.opacity(0.7) : .secondary)
                             }
                         }
+                        .foregroundColor(book.rating == 1 ? .red : .primary)
                     }
                 }
                 .onDelete(perform: deleteBooks(at:))
