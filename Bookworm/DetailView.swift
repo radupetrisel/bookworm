@@ -5,6 +5,7 @@
 //  Created by Radu Petrisel on 14.07.2023.
 //
 
+import CoreData
 import SwiftUI
 
 struct DetailView: View {
@@ -65,5 +66,23 @@ struct DetailView: View {
         try? viewContext.save()
         
         dismiss()
+    }
+}
+
+struct DetailView_Previews: PreviewProvider {
+    static let viewContext = DataController.preview.container.viewContext
+    
+    static var book: Book = {
+        var book = Book(context: viewContext)
+        book.title = "Test title"
+        book.author = "Test Author"
+        book.genre = "Mystery"
+        book.rating = 3
+        book.review = "Test review"
+        return book
+    }()
+    
+    static var previews: some View {
+        DetailView(book: book)
     }
 }
