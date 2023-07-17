@@ -9,36 +9,27 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @FetchRequest(sortDescriptors: [
-        SortDescriptor(\.title),
-        SortDescriptor(\.author)
-    ]) private var books: FetchedResults<Book>
+    @FetchRequest(sortDescriptors: []) private var books: FetchedResults<Book>
     
     @State private var isShowingAddBookView = false
+    
+    private var booksByDate: [Date: [Book]] {
+        Dictionary(grouping: books, by: { $0.date?.ignoreTime ?? Date.distantPast })
+    }
     
     var body: some View {
         NavigationView {
             List {
-                ForEach(books) { book in
-                    NavigationLink {
-                        DetailView(book: book)
-                    } label: {
-                        HStack {
-                            EmojiRatingView(rating: book.rating)
-                                .font(.largeTitle)
-                            
-                            VStack(alignment: .leading) {
-                                Text(book.title ?? "Untitled")
-                                    .font(.headline)
-                                
-                                Text(book.author ?? "Unknown author")
-                                    .foregroundColor(book.rating == 1 ? .red.opacity(0.7) : .secondary)
+                ForEach(booksByDate.sorted(by: { lhs, rhs in lhs.key > rhs.key }), id: \.key) { date, value in
+                    Section {
+                        ForEach(value) { BookRow(book: $0) }
+                            .onDelete {
+                                deleteBooks(from: date, at: $0)
                             }
-                        }
-                        .foregroundColor(book.rating == 1 ? .red : .primary)
+                    } header: {
+                        Text(date.formatted(date: .abbreviated, time: .omitted))
                     }
                 }
-                .onDelete(perform: deleteBooks(at:))
             }
             .navigationTitle("Bookworm")
             .toolbar {
@@ -60,9 +51,9 @@ struct ContentView: View {
         }
     }
     
-    private func deleteBooks(at indices: IndexSet) {
+    private func deleteBooks(from date: Date, at indices: IndexSet) {
         for index in indices {
-            let book = books[index]
+            let book = booksByDate[date]![index]
             viewContext.delete(book)
         }
         
