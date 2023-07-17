@@ -8,14 +8,64 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: [
+        SortDescriptor(\.title),
+        SortDescriptor(\.author)
+    ]) private var books: FetchedResults<Book>
+    
+    @State private var isShowingAddBookView = false
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        NavigationView {
+            List {
+                ForEach(books) { book in
+                    NavigationLink {
+                        DetailView(book: book)
+                    } label: {
+                        HStack {
+                            EmojiRatingView(rating: book.rating)
+                                .font(.largeTitle)
+                            
+                            VStack(alignment: .leading) {
+                                Text(book.title ?? "Untitled")
+                                    .font(.headline)
+                                
+                                Text(book.author ?? "Unknown author")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .onDelete(perform: deleteBooks(at:))
+            }
+            .navigationTitle("Bookworm")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    EditButton()
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        isShowingAddBookView.toggle()
+                    } label: {
+                        Label("Add book", systemImage: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $isShowingAddBookView) {
+                AddBookView()
+            }
         }
-        .padding()
+    }
+    
+    private func deleteBooks(at indices: IndexSet) {
+        for index in indices {
+            let book = books[index]
+            viewContext.delete(book)
+        }
+        
+        try? viewContext.save()
     }
 }
 
